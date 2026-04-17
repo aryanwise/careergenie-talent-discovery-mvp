@@ -4,15 +4,30 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
-from app.github import GITHUB_TOKEN
-st.write("Token Loaded:", bool(GITHUB_TOKEN))
-
 import pandas as pd
 
 from app.github import search_users, get_user_details, get_user_repos
 from app.scoring import score_user
 from app.enrichment import infer_roles
 from app.integration import send_to_careergenie
+
+st.markdown("""
+<style>
+.stButton > button {
+    width: 100%;
+    border-radius: 8px;
+}
+
+textarea {
+    border-radius: 8px !important;
+}
+
+hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # -----------------------------
 # PAGE CONFIG (IMPORTANT)
@@ -50,7 +65,7 @@ language = st.sidebar.selectbox(
 
 location = st.sidebar.text_input("Location")
 
-min_followers = st.sidebar.slider("Min Users", 0, 500, 10)
+min_followers = st.sidebar.slider("Min Followers", 0, 500, 10)
 min_repos = st.sidebar.slider("Min Repos", 0, 100, 5)
 
 search_clicked = st.sidebar.button("Search")
@@ -115,7 +130,7 @@ candidates = st.session_state.candidates
 
 if candidates:
 
-    st.markdown("### 🎯 Top Matches")
+    st.markdown("## 🎯 Candidate Matches")
 
     top_score = candidates[0]["score"]
 
@@ -123,56 +138,57 @@ if candidates:
 
         is_top = c["score"] >= top_score * 0.9
 
-        # Card container
         with st.container():
-            col1, col2 = st.columns([3, 1])
 
+            col1, col2, col3 = st.columns([4, 2, 2])
+
+            # -----------------------------
+            # LEFT: NAME + INFO
+            # -----------------------------
             with col1:
-                if is_top:
-                    st.markdown(f"### ⭐ {c['username']}")
-                else:
-                    st.markdown(f"### {c['username']}")
+                name = f"⭐ {c['username']}" if is_top else c["username"]
+                st.markdown(f"### {name}")
 
-                st.markdown(f"**Score:** `{c['score']}`")
-
-                st.markdown("**Roles:** " + ", ".join(c["roles"]))
-
-                st.markdown(f"[View GitHub Profile]({c['url']})")
-
-                # Message box
-                message = st.text_area(
-                    "Message",
-                    value=f"Hi {c['username']}, I came across your GitHub and was impressed by your work.",
-                    key=f"msg_{c['username']}"
+                st.markdown(
+                    f"<a href='{c['url']}' target='_blank'>🔗 View GitHub Profile</a>",
+                    unsafe_allow_html=True
                 )
 
+                st.markdown(
+                    f"<span style='color:#aaa;'>Roles:</span> "
+                    f"<b>{', '.join(c['roles'])}</b>",
+                    unsafe_allow_html=True
+                )
+
+            # -----------------------------
+            # MIDDLE: SCORE
+            # -----------------------------
             with col2:
                 st.metric("Score", c["score"])
 
+            # -----------------------------
+            # RIGHT: ACTIONS
+            # -----------------------------
+            with col3:
+
+                message = st.text_area(
+                    "Message",
+                    value=f"Hi {c['username']}, really liked your work!",
+                    key=f"msg_{c['username']}",
+                    height=100
+                )
+
                 if st.button("Invite", key=f"invite_{c['username']}"):
+
                     candidate_with_msg = {**c, "message": message}
 
                     st.session_state.saved_candidates.append(candidate_with_msg)
 
                     send_to_careergenie(candidate_with_msg)
 
-                    st.success("Invited ✅")
+                    st.success("✅ Invited")
 
             st.divider()
-
-# -----------------------------
-# SIDEBAR - SAVED
-# -----------------------------
-st.sidebar.markdown("---")
-st.sidebar.header("📌 Saved Candidates")
-
-if st.session_state.saved_candidates:
-    for c in st.session_state.saved_candidates:
-        st.sidebar.markdown(f"**{c['username']}** ({c['score']})")
-        st.sidebar.caption(c.get("message", ""))
-        st.sidebar.markdown("---")
-else:
-    st.sidebar.write("No saved candidates yet.")
 
 # -----------------------------
 # EXPORT
