@@ -11,15 +11,21 @@ GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 
 def search_users(query, per_page=10):
     url = "https://api.github.com/search/users"
+
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28"
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json"
     }
+
     params = {"q": query, "per_page": per_page}
-    
+
     response = requests.get(url, headers=headers, params=params)
-    response.raise_for_status()  # Stops execution if there's an error (4xx or 5xx)
+
+    # error handling
+    if response.status_code != 200:
+        print("GitHub API Error:", response.text)
+        return []
+
     return response.json().get("items", [])
 
 def get_user_details(username):
