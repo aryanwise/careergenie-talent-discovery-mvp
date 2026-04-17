@@ -50,7 +50,7 @@ language = st.sidebar.selectbox(
 
 location = st.sidebar.text_input("Location")
 
-min_followers = st.sidebar.slider("Min Followers", 0, 500, 10)
+min_followers = st.sidebar.slider("Min Users", 0, 500, 10)
 min_repos = st.sidebar.slider("Min Repos", 0, 100, 5)
 
 search_clicked = st.sidebar.button("Search")
