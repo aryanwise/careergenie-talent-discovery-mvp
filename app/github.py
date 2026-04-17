@@ -1,9 +1,13 @@
 import requests
 import os
 from dotenv import load_dotenv
-load_dotenv()
+'''Streamlit cloud secret'''
+import streamlit as st
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+'''Use this if running locally'''
+# load_dotenv()
+# GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 def search_users(query, per_page=10):
     url = "https://api.github.com/search/users"
