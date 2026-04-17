@@ -4,6 +4,9 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
+from app.github import GITHUB_TOKEN
+st.write("Token Loaded:", bool(GITHUB_TOKEN))
+
 import pandas as pd
 
 from app.github import search_users, get_user_details, get_user_repos
